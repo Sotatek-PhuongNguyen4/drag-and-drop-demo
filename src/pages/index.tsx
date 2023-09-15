@@ -4,89 +4,49 @@ import plugin from "grapesjs-preset-webpage";
 import newPlugin from "grapesjs-preset-newsletter";
 import thePlugin from "grapesjs-plugin-export";
 import { useState } from "react";
+import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
 export default function DefaultEditor() {
   const [editor, setEditor] = useState<Editor>();
 
   const onEditor = (editor: Editor) => {
     console.log("Editor loaded", { editor });
+    editor?.setComponents(`<html>
+    <head>
+      <style>* { box-sizing: border-box; } body {margin: 0;}#iotg{height:150px;margin:0 auto 10px auto;padding:5px 5px 5px 5px;width:100%;}#ilun{padding:0;margin:0;vertical-align:top;width:50%;}#ib5k{padding:0;margin:0;vertical-align:top;width:50%;}.bdg-sect{background-color:#f41313;}</style>
+    </head>
+      <body><table id="iotg"><tbody><tr><td id="ilun"><section class="bdg-sect"><h1 class="heading">Insert title here</h1><p class="paragraph">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua</p></section></td><td id="ib5k"></td></tr></tbody></table></body>
+    <script></script>
+    </html>`);
     setEditor(editor);
   };
 
   const exportHTML = () => {
     const html = editor?.getHtml();
     const css = editor?.getCss();
-    const projectData = editor?.getProjectData();
+    const js = editor?.getJs();
 
-    // localStorage.setItem("projectData", JSON.stringify(html2));
-    // console.log(html);
-    // console.log(css);
-    editor?.runCommand("gjs-export-zip");
-    console.log(html, css, projectData);
-  };
+    const combinedCode = `
+    <html>
+    <head>
+      <style>${css}</style>
+    </head>
+      ${html}
+    <script>${js}</script>
+    </html>
+  `;
 
-  // let projectData;
-  // if (typeof window !== "undefined") {
-  //   projectData = JSON.parse(localStorage.getItem("projectData") as any);
-  // }
+    console.log(combinedCode);
 
-  const initProject = {
-    assets: [],
-    styles: [],
-    pages: [
-      {
-        frames: [
-          {
-            component: {
-              type: "wrapper",
-              stylable: [
-                "background",
-                "background-color",
-                "background-image",
-                "background-repeat",
-                "background-attachment",
-                "background-position",
-                "background-size",
-              ],
-              components: [
-                {
-                  tagName: "section",
-                  classes: ["bdg-sect"],
-                  components: [
-                    {
-                      tagName: "h1",
-                      type: "text",
-                      classes: ["heading"],
-                      components: [
-                        {
-                          type: "textnode",
-                          content: "Insert title here",
-                        },
-                      ],
-                    },
-                    {
-                      tagName: "p",
-                      type: "text",
-                      classes: ["paragraph"],
-                      components: [
-                        {
-                          type: "textnode",
-                          content:
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-            id: "mj3nHa9KjKJpySmz",
-          },
-        ],
-        type: "main",
-        id: "5Si6SKtkmmiTvDll",
-      },
-    ],
+    const blob = new Blob([combinedCode], { type: "text/html" });
+
+    const formData = new FormData();
+    formData.append("file", blob, "index.html");
+
+    for (const pair of formData.entries()) {
+      console.log(pair[0] + ", " + pair[1]);
+    }
   };
 
   return (
@@ -102,10 +62,10 @@ export default function DefaultEditor() {
         options={{
           height: "100vh",
           storageManager: false,
-          projectData: initProject,
+          // projectData: initProject,
         }}
         onEditor={onEditor}
-        plugins={[plugin, thePlugin]}
+        plugins={[plugin, newPlugin]}
       />
       <button onClick={exportHTML}>Export HTML</button>
     </>
